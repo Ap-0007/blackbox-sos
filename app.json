@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "BlackBox SOS",
+    "slug": "blackbox-sos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0a0a0a"
+    },
+    "ios": {
+      "bundleIdentifier": "com.blackbox.sos",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "BlackBox SOS needs your location to send it to emergency services in case of a crash.",
+        "NSLocationWhenInUseUsageDescription": "BlackBox SOS needs your location for crash reporting.",
+        "NSMotionUsageDescription": "BlackBox SOS uses motion sensors to detect crashes automatically.",
+        "UIBackgroundModes": ["location", "fetch", "processing"]
+      }
+    },
+    "android": {
+      "package": "com.blackbox.sos",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sensors",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "BlackBox SOS needs background location access to report your position in a crash."
+        }
+      ],
+      [
+        "expo-background-fetch",
+        { "taskName": "crash-sensor-monitor" }
+      ]
+    ],
+    "scheme": "blackbox-sos",
+    "web": { "bundler": "metro" }
+  }
+}
