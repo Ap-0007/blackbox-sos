@@ -1,0 +1,12 @@
+{
+  "name": "BlackBox SOS",
+  "short_name": "BlackBox",
+  "description": "Passive crash detection — your phone knows what happened before you can speak",
+  "start_url": "/user.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡</text></svg>", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

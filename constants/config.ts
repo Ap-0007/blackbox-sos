@@ -11,10 +11,12 @@ export const SEVERITY_COLORS = {
 } as const;
 
 // Replace with your actual keys in .env
-export const CLAUDE_API_KEY    = process.env.EXPO_PUBLIC_CLAUDE_API_KEY    ?? '';
-export const FIREBASE_API_KEY  = process.env.EXPO_PUBLIC_FIREBASE_API_KEY  ?? '';
-export const FIREBASE_PROJECT  = process.env.EXPO_PUBLIC_FIREBASE_PROJECT  ?? '';
-export const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID           ?? '';
+export const GROQ_API_KEY       = process.env.EXPO_PUBLIC_GROQ_API_KEY      ?? '';
+export const GROQ_MODEL         = 'llama3-8b-8192';   // free, fast, accurate enough
+export const GROQ_URL           = 'https://api.groq.com/openai/v1/chat/completions';
+export const FIREBASE_API_KEY   = process.env.EXPO_PUBLIC_FIREBASE_API_KEY  ?? '';
+export const FIREBASE_PROJECT   = process.env.EXPO_PUBLIC_FIREBASE_PROJECT  ?? '';
+export const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID            ?? '';
 export const TWILIO_AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN             ?? '';
 export const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER            ?? '';
 export const BACKEND_URL        = process.env.EXPO_PUBLIC_BACKEND_URL       ?? 'http://localhost:3001';

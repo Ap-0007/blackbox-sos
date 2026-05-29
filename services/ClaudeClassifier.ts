@@ -1,22 +1,15 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { CLAUDE_API_KEY } from '../constants/config';
+import { GROQ_API_KEY, GROQ_MODEL, GROQ_URL } from '../constants/config';
 import type { AIClassification, AccidentReport } from '../types';
 
-const client = new Anthropic({ apiKey: CLAUDE_API_KEY });
-
-export async function classifySeverity(report: AccidentReport): Promise<AIClassification> {
-  const direction = report.impactDirection;
-  const prompt = `You are an emergency medical AI analyzing a road accident.
+const PROMPT = (r: AccidentReport) => `You are an emergency medical AI analyzing a road accident.
 
 Sensor data:
-- Impact G-Force: ${report.impactForce.toFixed(2)}G
-- Speed at impact: ${report.speedAtImpact} kmph
-- Speed after impact: ${report.speedAfter} kmph
-- Speed drop: ${(report.speedAtImpact - report.speedAfter).toFixed(1)} kmph
-- Impact direction: ${direction}
-- Vehicle type: car/motorcycle (unknown)
+- Impact G-Force: ${r.impactForce.toFixed(2)}G
+- Speed at impact: ${r.speedAtImpact} kmph → ${r.speedAfter} kmph
+- Speed drop: ${(r.speedAtImpact - r.speedAfter).toFixed(1)} kmph
+- Impact direction: ${r.impactDirection}
 
-Based on this data respond with ONLY valid JSON, no markdown:
+Respond with ONLY valid JSON, no markdown, no explanation:
 {
   "severity": "CRITICAL" | "SERIOUS" | "MINOR",
   "likely_injuries": ["..."],
@@ -26,16 +19,32 @@ Based on this data respond with ONLY valid JSON, no markdown:
   "priority_score": 0.0
 }`;
 
-  const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 512,
-    messages: [{ role: 'user', content: prompt }],
+export async function classifySeverity(report: AccidentReport): Promise<AIClassification> {
+  const res = await fetch(GROQ_URL, {
+    method:  'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      model:       GROQ_MODEL,
+      messages:    [{ role: 'user', content: PROMPT(report) }],
+      max_tokens:  256,
+      temperature: 0.1,   // low temp = consistent JSON
+    }),
   });
 
-  const raw = (message.content[0] as { type: string; text: string }).text.trim();
-  return JSON.parse(raw) as AIClassification;
+  if (!res.ok) throw new Error(`Groq ${res.status}`);
+
+  const data = await res.json();
+  const text = (data.choices?.[0]?.message?.content ?? '').trim();
+
+  // Strip accidental markdown fences
+  const clean = text.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim();
+  return JSON.parse(clean) as AIClassification;
 }
 
+// Fast synchronous fallback — used instantly while async AI call is in flight
 export function classifySeveritySync(gForce: number): 'CRITICAL' | 'SERIOUS' | 'MINOR' {
   if (gForce >= 4.0) return 'CRITICAL';
   if (gForce >= 2.5) return 'SERIOUS';
