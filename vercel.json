@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    { "src": "/api/report", "dest": "/api/report.js" },
+    { "src": "/api/alert",  "dest": "/api/alert.js"  },
+    { "src": "/api/health", "dest": "/api/health.js" },
+    { "src": "/(.*)",       "dest": "/public/$1"     }
+  ],
+  "env": {
+    "TWILIO_ACCOUNT_SID":  "@twilio_account_sid",
+    "TWILIO_AUTH_TOKEN":   "@twilio_auth_token",
+    "TWILIO_FROM_NUMBER":  "@twilio_from_number"
+  }
+}
