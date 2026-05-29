@@ -14,5 +14,5 @@
     { "src": "/api/alert",  "dest": "/api/alert.js"  },
     { "src": "/api/health", "dest": "/api/health.js" },
     { "src": "/(.*)",       "dest": "/public/$1"     }
-  ],
+  ]
 }
