@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlackBox SOS — Emergency Dispatch</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── TOP BAR ── */
+    .topbar { background: #0f0f0f; border-bottom: 1px solid #1e1e1e; padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .logo { font-size: 15px; font-weight: 900; letter-spacing: 1px; color: #fff; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #00FF88; animation: blink 1.2s infinite; flex-shrink: 0; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
+    .live-label { font-size: 11px; color: #00FF88; font-weight: 700; letter-spacing: 1px; }
+
+    .counters { display: flex; gap: 10px; }
+    .counter { display: flex; align-items: center; gap: 6px; background: #1a1a1a; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; border: 1px solid; cursor: pointer; transition: opacity .15s; }
+    .counter:hover { opacity: .75; }
+    .counter.CRITICAL { border-color: #FF2D2D44; color: #FF2D2D; }
+    .counter.SERIOUS  { border-color: #FF8C0044; color: #FF8C00; }
+    .counter.MINOR    { border-color: #FFD70044; color: #FFD700; }
+    .counter.ALL      { border-color: #ffffff22; color: #aaa; }
+    .counter.active   { opacity: 1; filter: brightness(1.3); }
+    .counter-num      { font-size: 18px; }
+
+    .clock { font-size: 12px; color: #555; font-variant-numeric: tabular-nums; margin-left: auto; }
+
+    /* ── LAYOUT ── */
+    .body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── FEED (left) ── */
+    .feed { width: 420px; flex-shrink: 0; border-right: 1px solid #1e1e1e; display: flex; flex-direction: column; overflow: hidden; }
+    .feed-header { padding: 12px 16px; font-size: 11px; font-weight: 700; color: #555; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid #1e1e1e; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .feed-header span { background: #1a1a1a; border-radius: 5px; padding: 2px 8px; color: #888; }
+    .feed-list { flex: 1; overflow-y: auto; }
+    .feed-list::-webkit-scrollbar { width: 4px; }
+    .feed-list::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+    .incident-card { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: background .12s; position: relative; overflow: hidden; }
+    .incident-card:hover { background: #141414; }
+    .incident-card.selected { background: #161c18; }
+    .incident-card.new-flash { animation: flashIn .6s ease; }
+    @keyframes flashIn { 0%{background:#FF2D2D22} 100%{background:transparent} }
+
+    .ic-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .sev-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; letter-spacing: .5px; border: 1px solid; flex-shrink: 0; }
+    .sev-badge.CRITICAL { background: #FF2D2D22; border-color: #FF2D2D; color: #FF2D2D; }
+    .sev-badge.SERIOUS  { background: #FF8C0022; border-color: #FF8C00; color: #FF8C00; }
+    .sev-badge.MINOR    { background: #FFD70022; border-color: #FFD700; color: #FFD700; }
+
+    .ic-id   { font-size: 11px; color: #444; font-family: monospace; }
+    .ic-time { font-size: 11px; color: #555; margin-left: auto; }
+    .ic-main { font-size: 13px; font-weight: 600; color: #ddd; margin-bottom: 4px; }
+    .ic-sub  { font-size: 12px; color: #666; display: flex; gap: 12px; }
+    .ic-sub span { display: flex; align-items: center; gap: 4px; }
+
+    .dispatched-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; background: #00FF8822; color: #00FF88; border: 1px solid #00FF8844; border-radius: 4px; padding: 2px 6px; font-weight: 700; }
+
+    /* ── DETAIL (right) ── */
+    .detail { flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .detail::-webkit-scrollbar { width: 4px; }
+    .detail::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+    .detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #333; gap: 10px; }
+    .detail-empty svg { opacity: .15; }
+
+    /* detail header */
+    .d-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+    .d-banner { flex: 1; border-radius: 10px; padding: 14px 18px; border: 1px solid; display: flex; align-items: center; gap: 10px; }
+    .d-banner-text { font-size: 16px; font-weight: 900; letter-spacing: .5px; }
+    .d-banner.CRITICAL { background: #FF2D2D18; border-color: #FF2D2D55; color: #FF2D2D; }
+    .d-banner.SERIOUS  { background: #FF8C0018; border-color: #FF8C0055; color: #FF8C00; }
+    .d-banner.MINOR    { background: #FFD70018; border-color: #FFD70055; color: #FFD700; }
+
+    .d-actions { display: flex; flex-direction: column; gap: 8px; }
+    .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity .15s; }
+    .btn:hover { opacity: .85; }
+    .btn-nav    { background: #1a4aff; color: #fff; }
+    .btn-disp   { background: #00FF8820; color: #00FF88; border: 1px solid #00FF8844; }
+    .btn-disp.done { background: #00FF8815; opacity: .5; cursor: default; }
+
+    /* cards */
+    .d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .d-card { background: #141414; border-radius: 12px; padding: 16px; border: 1px solid #1e1e1e; }
+    .d-card-title { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    .d-card.full { grid-column: 1 / -1; }
+
+    .drow { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1e1e1e; font-size: 13px; }
+    .drow:last-child { border-bottom: none; }
+    .drow-label { color: #666; min-width: 130px; }
+    .drow-val { font-weight: 600; flex: 1; }
+
+    .big-score { font-size: 40px; font-weight: 900; text-align: right; margin-top: 4px; }
+    .injuries-list { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+    .injury-tag { background: #FF8C0018; border: 1px solid #FF8C0033; color: #FF8C00; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+
+    /* sensor timeline */
+    .timeline { width: 100%; height: 60px; background: #141414; border-radius: 8px; overflow: hidden; margin-top: 8px; position: relative; }
+    .timeline canvas { width: 100%; height: 100%; }
+
+    /* notification toast */
+    .toasts { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 100; pointer-events: none; }
+    .toast { background: #1a1a1a; border-left: 3px solid; border-radius: 8px; padding: 10px 14px; min-width: 260px; font-size: 13px; animation: slideIn .3s ease; pointer-events: auto; cursor: pointer; }
+    .toast.CRITICAL { border-color: #FF2D2D; }
+    .toast.SERIOUS  { border-color: #FF8C00; }
+    .toast.MINOR    { border-color: #FFD700; }
+    .toast-title { font-weight: 700; margin-bottom: 3px; }
+    .toast-sub   { color: #888; font-size: 12px; }
+    @keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* map placeholder */
+    .mini-map { width: 100%; height: 120px; background: #141414; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #333; font-size: 12px; margin-top: 8px; border: 1px solid #1e1e1e; }
+
+    /* filter bar active state */
+    .filter-active .incident-card { opacity: .35; }
+    .filter-active .incident-card.match { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="live-dot"></div>
+    <div class="logo">BlackBox SOS</div>
+    <div class="live-label">LIVE</div>
+  </div>
+  <div class="counters">
+    <div class="counter ALL active" data-filter="ALL">
+      <span class="counter-num" id="cnt-all">0</span> Total
+    </div>
+    <div class="counter CRITICAL" data-filter="CRITICAL">
+      <span class="counter-num" id="cnt-critical">0</span> Critical
+    </div>
+    <div class="counter SERIOUS" data-filter="SERIOUS">
+      <span class="counter-num" id="cnt-serious">0</span> Serious
+    </div>
+    <div class="counter MINOR" data-filter="MINOR">
+      <span class="counter-num" id="cnt-minor">0</span> Minor
+    </div>
+  </div>
+  <div class="clock" id="clock">--:--:--</div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+  <!-- FEED -->
+  <div class="feed">
+    <div class="feed-header">
+      Incoming Accidents
+      <span id="feed-count">0 active</span>
+    </div>
+    <div class="feed-list" id="feed-list"></div>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail" id="detail">
+    <div class="detail-empty">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <p>Select an incident to view details</p>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toasts" id="toasts"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — replace with your Firebase values
+// ─────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:      "YOUR_API_KEY",
+  authDomain:  "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId:   "YOUR_PROJECT",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const incidents = new Map();   // id → report
+let selectedId  = null;
+let activeFilter = 'ALL';
+const dispatched = new Set();
+const SEV = { CRITICAL: '#FF2D2D', SERIOUS: '#FF8C00', MINOR: '#FFD700' };
+
+// ─────────────────────────────────────────────
+// CLOCK
+// ─────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+// ─────────────────────────────────────────────
+// FIREBASE LISTENER — real-time all accidents
+// ─────────────────────────────────────────────
+db.ref('accidents').on('child_added', (snap) => {
+  const r = snap.val();
+  r._key = snap.key;
+  addOrUpdateIncident(r, true);
+});
+
+db.ref('accidents').on('child_changed', (snap) => {
+  const r = snap.val();
+  r._key = snap.key;
+  addOrUpdateIncident(r, false);
+});
+
+function addOrUpdateIncident(r, isNew) {
+  const id = r.id ?? r._key;
+  r._id = id;
+  const existing = incidents.has(id);
+  incidents.set(id, r);
+  rebuildFeed();
+  updateCounters();
+  if (isNew && !existing) {
+    showToast(r);
+    playAlert(r.severity);
+  }
+  if (id === selectedId) renderDetail(r);
+}
+
+// ─────────────────────────────────────────────
+// FEED
+// ─────────────────────────────────────────────
+function rebuildFeed() {
+  const list = document.getElementById('feed-list');
+  // Sort: CRITICAL first, then by timestamp desc
+  const sorted = [...incidents.values()].sort((a, b) => {
+    const sevOrder = { CRITICAL: 0, SERIOUS: 1, MINOR: 2 };
+    const sd = (sevOrder[a.severity] ?? 1) - (sevOrder[b.severity] ?? 1);
+    if (sd !== 0) return sd;
+    return (b.timestamp ?? 0) - (a.timestamp ?? 0);
+  });
+
+  list.innerHTML = '';
+  sorted.forEach((r) => {
+    const matches = activeFilter === 'ALL' || r.severity === activeFilter;
+    const isSelected = r._id === selectedId;
+    const isDispatched = dispatched.has(r._id);
+    const card = document.createElement('div');
+    card.className = `incident-card ${isSelected ? 'selected' : ''} ${!matches ? 'hidden-filter' : ''}`;
+    card.style.display = (!matches) ? 'none' : '';
+    card.dataset.id = r._id;
+
+    const time = new Date(r.timestamp).toLocaleTimeString();
+    const loc = r.location ? `${Number(r.location.lat).toFixed(3)}°N, ${Number(r.location.lng).toFixed(3)}°E` : 'Unknown';
+
+    card.innerHTML = `
+      ${isDispatched ? '<div class="dispatched-tag">✓ DISPATCHED</div>' : ''}
+      <div class="ic-top">
+        <div class="sev-badge ${r.severity}">${r.severity}</div>
+        <div class="ic-id">${String(r._id).slice(-8)}</div>
+        <div class="ic-time">${time}</div>
+      </div>
+      <div class="ic-main">${loc}</div>
+      <div class="ic-sub">
+        <span>💥 ${Number(r.impactForce ?? 0).toFixed(1)}G</span>
+        <span>🚗 ${r.speedAtImpact ?? '—'} kmph</span>
+        <span>📐 ${r.impactDirection ?? '—'}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => selectIncident(r._id));
+    list.appendChild(card);
+  });
+
+  document.getElementById('feed-count').textContent =
+    `${sorted.length} active`;
+}
+
+function selectIncident(id) {
+  selectedId = id;
+  rebuildFeed();
+  renderDetail(incidents.get(id));
+}
+
+// ─────────────────────────────────────────────
+// DETAIL PANEL
+// ─────────────────────────────────────────────
+function renderDetail(r) {
+  const detail = document.getElementById('detail');
+  if (!r) { detail.innerHTML = ''; return; }
+
+  const sevColor = SEV[r.severity] ?? '#FF2D2D';
+  const time = new Date(r.timestamp).toLocaleTimeString();
+  const mapsLink = r.location
+    ? `https://maps.google.com/?q=${r.location.lat},${r.location.lng}`
+    : '#';
+  const ai = r.aiClassification ?? {};
+  const isDisp = dispatched.has(r._id);
+
+  const injuryTags = (ai.likely_injuries ?? [])
+    .map(i => `<span class="injury-tag">${i}</span>`).join('');
+
+  detail.innerHTML = `
+    <div class="d-header">
+      <div class="d-banner ${r.severity}">
+        <span style="font-size:20px">⚠</span>
+        <span class="d-banner-text">INCOMING — ${r.severity}</span>
+      </div>
+      <div class="d-actions">
+        <a class="btn btn-nav" href="${mapsLink}" target="_blank">🗺 Navigate</a>
+        <button class="btn btn-disp ${isDisp ? 'done' : ''}" onclick="markDispatched('${r._id}')">
+          ${isDisp ? '✓ Dispatched' : '🚑 Mark Dispatched'}
+        </button>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <!-- Sensor data -->
+      <div class="d-card">
+        <div class="d-card-title">Sensor Data</div>
+        ${drow('📍 Location', r.location ? `${Number(r.location.lat).toFixed(4)}°N, ${Number(r.location.lng).toFixed(4)}°E` : '—')}
+        ${drow('⏱ Time', time)}
+        ${drow('💥 Impact force', `${Number(r.impactForce ?? 0).toFixed(2)}G`, sevColor)}
+        ${drow('🚗 Speed', `${r.speedAtImpact ?? '—'} → ${r.speedAfter ?? 0} kmph`)}
+        ${drow('📐 Direction', r.impactDirection ?? '—')}
+        ${drow('📊 Snapshots', `${r.last30Seconds ?? 0} buffered`)}
+      </div>
+
+      <!-- AI assessment -->
+      <div class="d-card">
+        <div class="d-card-title">AI Assessment</div>
+        ${ai.severity ? `
+          ${drow('🚑 Dispatch', ai.dispatch ?? '—')}
+          ${drow('🏥 Hospital dept', (ai.hospital_dept ?? []).join(', '))}
+          ${drow('👥 Casualties', String(ai.estimated_casualties ?? '—'))}
+          <div class="big-score" style="color:${sevColor}">${(ai.priority_score ?? 0).toFixed(1)}<span style="font-size:14px;color:#555">/10</span></div>
+        ` : '<div style="color:#444;font-size:13px;padding-top:8px">Awaiting AI classification…</div>'}
+      </div>
+
+      <!-- Likely injuries (full width) -->
+      ${ai.likely_injuries?.length ? `
+      <div class="d-card full">
+        <div class="d-card-title">Predicted Injuries</div>
+        <div class="injuries-list">${injuryTags}</div>
+      </div>` : ''}
+
+      <!-- Mini map placeholder -->
+      <div class="d-card full">
+        <div class="d-card-title">Location</div>
+        <div class="mini-map">
+          <a href="${mapsLink}" target="_blank" style="color:#1a4aff;font-weight:700;font-size:13px;">
+            📍 Open in Google Maps → ${r.location ? `${Number(r.location.lat).toFixed(4)}, ${Number(r.location.lng).toFixed(4)}` : ''}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div style="color:#333;font-size:11px;text-align:right;margin-top:4px">ID: ${r._id}</div>
+  `;
+}
+
+function drow(label, val, color = '#fff') {
+  return `<div class="drow">
+    <span class="drow-label">${label}</span>
+    <span class="drow-val" style="color:${color}">${val}</span>
+  </div>`;
+}
+
+function markDispatched(id) {
+  dispatched.add(id);
+  rebuildFeed();
+  if (id === selectedId) renderDetail(incidents.get(id));
+}
+
+// ─────────────────────────────────────────────
+// COUNTERS
+// ─────────────────────────────────────────────
+function updateCounters() {
+  const all = [...incidents.values()];
+  document.getElementById('cnt-all').textContent      = all.length;
+  document.getElementById('cnt-critical').textContent = all.filter(r => r.severity === 'CRITICAL').length;
+  document.getElementById('cnt-serious').textContent  = all.filter(r => r.severity === 'SERIOUS').length;
+  document.getElementById('cnt-minor').textContent    = all.filter(r => r.severity === 'MINOR').length;
+}
+
+// ─────────────────────────────────────────────
+// FILTER
+// ─────────────────────────────────────────────
+document.querySelectorAll('.counter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeFilter = btn.dataset.filter;
+    document.querySelectorAll('.counter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rebuildFeed();
+  });
+});
+
+// ─────────────────────────────────────────────
+// TOAST NOTIFICATIONS
+// ─────────────────────────────────────────────
+function showToast(r) {
+  const toasts = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${r.severity}`;
+  t.innerHTML = `
+    <div class="toast-title">${r.severity} — New Crash Detected</div>
+    <div class="toast-sub">${Number(r.impactForce ?? 0).toFixed(1)}G · ${r.speedAtImpact ?? '—'} kmph · ${r.impactDirection ?? ''}</div>
+  `;
+  t.onclick = () => { selectIncident(r._id); t.remove(); };
+  toasts.prepend(t);
+  setTimeout(() => t.remove(), 8000);
+}
+
+// ─────────────────────────────────────────────
+// AUDIO ALERT  (beep via Web Audio API)
+// ─────────────────────────────────────────────
+let audioCtx;
+function playAlert(severity) {
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    const freqs = { CRITICAL: [880, 660, 880], SERIOUS: [660], MINOR: [440] };
+    const tones = freqs[severity] ?? [440];
+    let t = audioCtx.currentTime;
+    tones.forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+      t += 0.3;
+    });
+  } catch (_) {}
+}
+
+// ─────────────────────────────────────────────
+// DEMO SEED — loads mock data so UI is testable
+// without Firebase. Remove in production.
+// ─────────────────────────────────────────────
+const DEMO_REPORTS = [
+  {
+    _id:'demo_001', id:'demo_001', timestamp: Date.now() - 120000,
+    location:{lat:21.1458,lng:79.0882}, impactForce:4.2, speedAtImpact:87, speedAfter:0,
+    impactDirection:'Front-left', severity:'CRITICAL', last30Seconds:300,
+    aiClassification:{severity:'CRITICAL',likely_injuries:['head trauma','chest injury','rib fractures'],dispatch:'trauma ambulance',hospital_dept:['ICU','neurosurgery'],estimated_casualties:2,priority_score:9.2},
+  },
+  {
+    _id:'demo_002', id:'demo_002', timestamp: Date.now() - 60000,
+    location:{lat:21.1521,lng:79.0761}, impactForce:2.9, speedAtImpact:54, speedAfter:5,
+    impactDirection:'Rear', severity:'SERIOUS', last30Seconds:300,
+    aiClassification:{severity:'SERIOUS',likely_injuries:['whiplash','lumbar sprain'],dispatch:'basic ambulance',hospital_dept:['emergency','orthopaedics'],estimated_casualties:1,priority_score:6.1},
+  },
+  {
+    _id:'demo_003', id:'demo_003', timestamp: Date.now() - 15000,
+    location:{lat:21.1390,lng:79.1020}, impactForce:2.6, speedAtImpact:30, speedAfter:0,
+    impactDirection:'Right-side', severity:'SERIOUS', last30Seconds:300,
+  },
+  {
+    _id:'demo_004', id:'demo_004', timestamp: Date.now() - 5000,
+    location:{lat:21.1600,lng:79.0900}, impactForce:1.8, speedAtImpact:22, speedAfter:10,
+    impactDirection:'Front', severity:'MINOR', last30Seconds:120,
+    aiClassification:{severity:'MINOR',likely_injuries:['minor bruising'],dispatch:'first responder',hospital_dept:['general'],estimated_casualties:1,priority_score:2.4},
+  },
+];
+
+// Inject demo data (comment out once Firebase is live)
+setTimeout(() => {
+  DEMO_REPORTS.forEach((r, i) => {
+    setTimeout(() => addOrUpdateIncident(r, i > 1), i * 800);
+  });
+}, 400);
+</script>
+</body>
+</html>

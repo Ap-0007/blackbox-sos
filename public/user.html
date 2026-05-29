@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My BlackBox — User Dashboard</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--green:#00FF88;--red:#FF2D2D;--orange:#FF8C00;--bg:#0a0a0a;--card:#141414;--border:#1e1e1e}
+    body{background:var(--bg);color:#fff;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+
+    nav{background:#0f0f0f;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px}
+    .back{color:#666;font-size:13px;margin-right:auto}.back:hover{color:#fff}
+    .nav-logo{font-weight:900;font-size:15px;letter-spacing:1px}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite;display:inline-block;margin-right:6px}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+    .container{max-width:780px;margin:0 auto;padding:32px 20px 64px}
+    h1{font-size:28px;font-weight:900;margin-bottom:4px}
+    .subtitle{color:#666;font-size:14px;margin-bottom:32px}
+
+    /* STATUS CARD */
+    .status-card{background:linear-gradient(135deg,#0d2419,#0a0a0a);border:1px solid #00FF8833;border-radius:20px;padding:28px;margin-bottom:20px;display:flex;align-items:center;gap:24px}
+    .status-shield{font-size:56px}
+    .status-info h2{font-size:22px;font-weight:800;color:var(--green);margin-bottom:4px}
+    .status-info p{color:#888;font-size:14px}
+    .status-badge{margin-left:auto;background:#00FF8822;border:1px solid #00FF8844;color:var(--green);font-size:11px;font-weight:800;padding:6px 14px;border-radius:20px;letter-spacing:.5px;white-space:nowrap}
+
+    /* SECTION */
+    .section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px}
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .section-title{font-size:15px;font-weight:700}
+    .section-sub{color:#555;font-size:12px;margin-top:2px}
+
+    /* CONTACTS */
+    .contact-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+    .contact-row:last-of-type{border-bottom:none}
+    .contact-avatar{width:40px;height:40px;border-radius:20px;background:#00FF8820;border:1px solid #00FF8844;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .contact-info{flex:1}
+    .contact-name{font-size:14px;font-weight:600}
+    .contact-phone{color:#666;font-size:13px}
+    .contact-del{background:none;border:none;color:#333;cursor:pointer;font-size:18px;padding:4px;border-radius:6px;transition:color .15s}
+    .contact-del:hover{color:var(--red)}
+
+    .input-row{display:flex;gap:8px;margin-top:16px}
+    input{background:#1a1a1a;border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:#fff;font-size:14px;outline:none;transition:border-color .15s}
+    input:focus{border-color:#444}
+    input::placeholder{color:#444}
+    .input-name{flex:1}
+    .input-phone{flex:1.5}
+    .add-btn{background:#00FF8820;border:1px solid #00FF8844;color:var(--green);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
+    .add-btn:hover{background:#00FF8835}
+
+    /* CRASH HISTORY */
+    .crash-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;border-radius:8px;margin:0 -8px;padding-left:8px;padding-right:8px}
+    .crash-row:hover{background:#1a1a1a}
+    .crash-row:last-of-type{border-bottom:none}
+    .sev-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .crash-main{flex:1}
+    .crash-title{font-size:14px;font-weight:600}
+    .crash-meta{color:#666;font-size:12px;margin-top:2px}
+    .crash-g{font-size:18px;font-weight:800;color:var(--red)}
+
+    /* SETTINGS TOGGLES */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+    .toggle-row:last-of-type{border-bottom:none}
+    .toggle-label{font-size:14px;font-weight:600}
+    .toggle-sub{color:#555;font-size:12px;margin-top:2px}
+    .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0;position:absolute}
+    .slider{position:absolute;inset:0;background:#2a2a2a;border-radius:12px;cursor:pointer;transition:.3s}
+    .slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#666;border-radius:50%;transition:.3s}
+    .toggle input:checked+.slider{background:#00FF8830;border:1px solid #00FF8860}
+    .toggle input:checked+.slider:before{transform:translateX(20px);background:var(--green)}
+
+    /* QR SHARE */
+    .qr-box{display:flex;gap:20px;align-items:center}
+    .qr-img{width:100px;height:100px;background:#1a1a1a;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0}
+    .qr-info h4{font-size:14px;font-weight:700;margin-bottom:6px}
+    .qr-info p{color:#666;font-size:13px;line-height:1.6;margin-bottom:10px}
+    .copy-btn{background:#1a1a1a;border:1px solid var(--border);color:#aaa;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+    .copy-btn:hover{border-color:#555;color:#fff}
+
+    /* EMPTY STATE */
+    .empty{text-align:center;padding:32px;color:#444}
+    .empty p{font-size:14px}
+
+    /* SAVE TOAST */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--green);color:var(--green);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;display:none;z-index:99}
+
+    @media(max-width:520px){
+      .input-row{flex-direction:column}
+      .status-card{flex-direction:column;text-align:center}
+      .status-badge{margin:0}
+      .qr-box{flex-direction:column;text-align:center}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="back" href="index.html">← Back</a>
+  <span class="nav-logo"><span class="live-dot"></span>BlackBox SOS</span>
+</nav>
+
+<div class="container">
+  <h1>My BlackBox</h1>
+  <p class="subtitle">Your personal crash detection profile — set it once, it protects you always.</p>
+
+  <!-- STATUS -->
+  <div class="status-card">
+    <div class="status-shield">🛡</div>
+    <div class="status-info">
+      <h2>Protection Active</h2>
+      <p>Your app is recording sensor data continuously.<br>Last sync: <span id="last-sync">just now</span></p>
+    </div>
+    <div class="status-badge">● LIVE</div>
+  </div>
+
+  <!-- EMERGENCY CONTACTS -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Emergency Contacts</div>
+        <div class="section-sub">Notified by SMS the moment a crash is detected</div>
+      </div>
+      <span id="contact-count" style="color:#555;font-size:13px">0 contacts</span>
+    </div>
+
+    <div id="contacts-list"></div>
+
+    <div class="input-row">
+      <input class="input-name" id="inp-name"  type="text"  placeholder="Name"/>
+      <input class="input-phone" id="inp-phone" type="tel"   placeholder="Phone number"/>
+      <button class="add-btn" onclick="addContact()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- CRASH HISTORY -->
+  <div class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Crash History</div>
+        <div class="section-sub">Reports sent from your device</div>
+      </div>
+    </div>
+    <div id="crash-list"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Detection Settings</div>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Background Monitoring</div><div class="toggle-sub">Detect crashes even when app is closed</div></div>
+      <label class="toggle"><input type="checkbox" id="bg-toggle" checked onchange="saveSetting('bgMonitoring',this.checked)"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Auto-call Emergency Services</div><div class="toggle-sub">Call ambulance automatically after crash is confirmed</div></div>
+      <label class="toggle"><input type="checkbox" id="autocall-toggle" onchange="saveSetting('autoCall',this.checked)"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Volunteer Bystander Network</div><div class="toggle-sub">Be alerted when a crash happens near you</div></div>
+      <label class="toggle"><input type="checkbox" id="vol-toggle" onchange="saveSetting('volunteer',this.checked)"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Share Anonymous Sensor Data</div><div class="toggle-sub">Help improve detection accuracy</div></div>
+      <label class="toggle"><input type="checkbox" id="data-toggle" checked onchange="saveSetting('shareData',this.checked)"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- SHARE BYSTANDER GUIDE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Share Bystander Guide</div>
+    </div>
+    <div class="qr-box">
+      <div class="qr-img">📲</div>
+      <div class="qr-info">
+        <h4>Anyone can scan or open this link</h4>
+        <p>If someone finds you injured, your phone screen shows this guide. Share the link so bystanders know what to do — no app download needed.</p>
+        <button class="copy-btn" onclick="copyBystanderLink()">Copy Bystander Guide Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Saved</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+  // Replace with your Firebase config
+  const firebaseConfig = {
+    apiKey:      "YOUR_API_KEY",
+    authDomain:  "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId:   "YOUR_PROJECT",
+  };
+  try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+
+  // ── LOCAL STORAGE (fallback when Firebase not configured) ──
+  function getContacts() { try { return JSON.parse(localStorage.getItem('contacts') || '[]'); } catch { return []; } }
+  function saveContacts(c) { localStorage.setItem('contacts', JSON.stringify(c)); renderContacts(); showToast(); }
+  function getSettings() { try { return JSON.parse(localStorage.getItem('settings') || '{}'); } catch { return {}; } }
+  function saveSetting(k, v) { const s = getSettings(); s[k] = v; localStorage.setItem('settings', JSON.stringify(s)); showToast(); }
+  function getCrashHistory() { try { return JSON.parse(localStorage.getItem('crashHistory') || '[]'); } catch { return []; } }
+
+  // ── CONTACTS ──
+  function renderContacts() {
+    const list = document.getElementById('contacts-list');
+    const contacts = getContacts();
+    document.getElementById('contact-count').textContent = `${contacts.length} contact${contacts.length !== 1 ? 's' : ''}`;
+    if (contacts.length === 0) { list.innerHTML = '<div class="empty"><p>No contacts yet. Add someone who should be notified in an emergency.</p></div>'; return; }
+    list.innerHTML = contacts.map((c, i) => `
+      <div class="contact-row">
+        <div class="contact-avatar">👤</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-phone">${c.phone}</div>
+        </div>
+        <button class="contact-del" onclick="removeContact(${i})">✕</button>
+      </div>`).join('');
+  }
+
+  function addContact() {
+    const name  = document.getElementById('inp-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    if (!phone) return;
+    const contacts = getContacts();
+    contacts.push({ name: name || 'Contact', phone });
+    saveContacts(contacts);
+    document.getElementById('inp-name').value  = '';
+    document.getElementById('inp-phone').value = '';
+  }
+
+  function removeContact(i) {
+    const c = getContacts(); c.splice(i, 1); saveContacts(c);
+  }
+
+  document.getElementById('inp-phone').addEventListener('keydown', (e) => { if (e.key === 'Enter') addContact(); });
+
+  // ── CRASH HISTORY ──
+  function renderCrashHistory(reports) {
+    const el = document.getElementById('crash-list');
+    if (!reports || reports.length === 0) {
+      el.innerHTML = '<div class="empty"><p>No crashes recorded. Stay safe out there.</p></div>'; return;
+    }
+    const SEV_COLOR = { CRITICAL: '#FF2D2D', SERIOUS: '#FF8C00', MINOR: '#FFD700' };
+    el.innerHTML = reports.slice(0, 10).map((r) => {
+      const color = SEV_COLOR[r.severity] || '#555';
+      const time  = new Date(r.timestamp).toLocaleString();
+      return `<div class="crash-row">
+        <div class="sev-dot" style="background:${color}"></div>
+        <div class="crash-main">
+          <div class="crash-title">${r.severity} — ${r.impactDirection || 'impact'}</div>
+          <div class="crash-meta">${time} · ${r.location?.lat?.toFixed(3) || '—'}°N</div>
+        </div>
+        <div class="crash-g" style="color:${color}">${Number(r.impactForce||0).toFixed(1)}G</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Load crash history from Firebase
+  try {
+    firebase.database().ref('accidents').limitToLast(10).once('value', (snap) => {
+      const data = snap.val();
+      if (data) renderCrashHistory(Object.values(data).reverse());
+      else renderCrashHistory([]);
+    });
+  } catch { renderCrashHistory(getCrashHistory()); }
+
+  // ── SETTINGS ──
+  function loadSettings() {
+    const s = getSettings();
+    document.getElementById('bg-toggle').checked       = s.bgMonitoring !== false;
+    document.getElementById('autocall-toggle').checked = !!s.autoCall;
+    document.getElementById('vol-toggle').checked      = !!s.volunteer;
+    document.getElementById('data-toggle').checked     = s.shareData !== false;
+  }
+
+  // ── TOAST ──
+  function showToast(msg = '✓ Saved') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+  }
+
+  // ── COPY LINK ──
+  function copyBystanderLink() {
+    const url = `${location.origin}/bystander.html`;
+    navigator.clipboard?.writeText(url).then(() => showToast('✓ Link copied!')).catch(() => {
+      prompt('Copy this link:', url);
+    });
+  }
+
+  // ── LAST SYNC ──
+  setInterval(() => {
+    document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
+  }, 30000);
+
+  // ── INIT ──
+  renderContacts();
+  loadSettings();
+</script>
+</body>
+</html>

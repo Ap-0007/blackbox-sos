@@ -1,479 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BlackBox SOS — Emergency Dispatch</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BlackBox SOS — Your phone knows what happened before you can speak</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --red:#FF2D2D;--orange:#FF8C00;--green:#00FF88;
+      --bg:#0a0a0a;--card:#141414;--border:#1e1e1e;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:#fff;font-family:'Segoe UI',system-ui,sans-serif;line-height:1.6}
+    a{color:inherit;text-decoration:none}
 
-    /* ── TOP BAR ── */
-    .topbar { background: #0f0f0f; border-bottom: 1px solid #1e1e1e; padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-    .topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
-    .logo { font-size: 15px; font-weight: 900; letter-spacing: 1px; color: #fff; }
-    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #00FF88; animation: blink 1.2s infinite; flex-shrink: 0; }
-    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
-    .live-label { font-size: 11px; color: #00FF88; font-weight: 700; letter-spacing: 1px; }
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;background:#0a0a0acc;backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px}
+    .nav-logo{font-size:16px;font-weight:900;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .nav-links{margin-left:auto;display:flex;gap:8px}
+    .nav-btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--border);background:transparent;color:#aaa;cursor:pointer;transition:all .15s}
+    .nav-btn:hover{color:#fff;border-color:#444}
+    .nav-btn.primary{background:var(--green);color:#000;border-color:var(--green)}
+    .nav-btn.primary:hover{background:#00e07a}
 
-    .counters { display: flex; gap: 10px; }
-    .counter { display: flex; align-items: center; gap: 6px; background: #1a1a1a; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; border: 1px solid; cursor: pointer; transition: opacity .15s; }
-    .counter:hover { opacity: .75; }
-    .counter.CRITICAL { border-color: #FF2D2D44; color: #FF2D2D; }
-    .counter.SERIOUS  { border-color: #FF8C0044; color: #FF8C00; }
-    .counter.MINOR    { border-color: #FFD70044; color: #FFD700; }
-    .counter.ALL      { border-color: #ffffff22; color: #aaa; }
-    .counter.active   { opacity: 1; filter: brightness(1.3); }
-    .counter-num      { font-size: 18px; }
+    /* HERO */
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 24px 60px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,#FF2D2D0a 0%,transparent 70%)}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;background:#FF2D2D18;border:1px solid #FF2D2D44;color:var(--red);font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:.5px;margin-bottom:28px}
+    .hero h1{font-size:clamp(32px,6vw,72px);font-weight:900;line-height:1.1;max-width:900px;margin-bottom:20px}
+    .hero h1 span{color:var(--green)}
+    .hero p{font-size:clamp(15px,2vw,20px);color:#888;max-width:600px;margin-bottom:40px}
+    .hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+    .btn-hero{padding:14px 28px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;transition:all .15s;border:none;display:flex;align-items:center;gap:8px}
+    .btn-hero.primary{background:var(--green);color:#000}
+    .btn-hero.primary:hover{background:#00e07a;transform:translateY(-1px)}
+    .btn-hero.secondary{background:var(--card);color:#fff;border:1px solid var(--border)}
+    .btn-hero.secondary:hover{border-color:#555;transform:translateY(-1px)}
+    .btn-hero.red{background:var(--red);color:#fff}
+    .btn-hero.red:hover{background:#e01f1f;transform:translateY(-1px)}
 
-    .clock { font-size: 12px; color: #555; font-variant-numeric: tabular-nums; margin-left: auto; }
+    /* STATS BAR */
+    .stats{display:flex;justify-content:center;gap:40px;padding:40px 24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .stat{text-align:center}
+    .stat-num{font-size:36px;font-weight:900;color:var(--green)}
+    .stat-label{color:#555;font-size:13px;margin-top:2px}
 
-    /* ── LAYOUT ── */
-    .body { display: flex; flex: 1; overflow: hidden; }
+    /* HOW IT WORKS */
+    section{padding:80px 24px;max-width:1100px;margin:0 auto}
+    .section-title{text-align:center;font-size:clamp(22px,3vw,36px);font-weight:900;margin-bottom:12px}
+    .section-sub{text-align:center;color:#666;font-size:15px;margin-bottom:48px}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+    .step{background:var(--card);border-radius:16px;padding:24px;border:1px solid var(--border);position:relative}
+    .step-num{font-size:48px;font-weight:900;color:#1e1e1e;position:absolute;top:16px;right:20px}
+    .step-icon{font-size:32px;margin-bottom:12px}
+    .step h3{font-size:16px;font-weight:700;margin-bottom:6px}
+    .step p{color:#666;font-size:13px;line-height:1.6}
 
-    /* ── FEED (left) ── */
-    .feed { width: 420px; flex-shrink: 0; border-right: 1px solid #1e1e1e; display: flex; flex-direction: column; overflow: hidden; }
-    .feed-header { padding: 12px 16px; font-size: 11px; font-weight: 700; color: #555; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid #1e1e1e; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-    .feed-header span { background: #1a1a1a; border-radius: 5px; padding: 2px 8px; color: #888; }
-    .feed-list { flex: 1; overflow-y: auto; }
-    .feed-list::-webkit-scrollbar { width: 4px; }
-    .feed-list::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+    /* PORTALS */
+    .portals{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:0}
+    .portal-card{border-radius:20px;padding:32px;border:1px solid;transition:transform .2s;cursor:pointer}
+    .portal-card:hover{transform:translateY(-4px)}
+    .portal-card.user{background:#00FF8810;border-color:#00FF8830}
+    .portal-card.ambulance{background:#FF2D2D10;border-color:#FF2D2D30}
+    .portal-card.bystander{background:#FF8C0010;border-color:#FF8C0030}
+    .portal-icon{font-size:40px;margin-bottom:16px}
+    .portal-card h3{font-size:20px;font-weight:800;margin-bottom:8px}
+    .portal-card p{color:#888;font-size:14px;line-height:1.6;margin-bottom:20px}
+    .portal-link{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:10px 20px;border-radius:10px;border:1px solid}
+    .portal-card.user .portal-link{background:#00FF8820;border-color:#00FF8844;color:var(--green)}
+    .portal-card.ambulance .portal-link{background:#FF2D2D20;border-color:#FF2D2D44;color:var(--red)}
+    .portal-card.bystander .portal-link{background:#FF8C0020;border-color:#FF8C0044;color:var(--orange)}
 
-    .incident-card { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: background .12s; position: relative; overflow: hidden; }
-    .incident-card:hover { background: #141414; }
-    .incident-card.selected { background: #161c18; }
-    .incident-card.new-flash { animation: flashIn .6s ease; }
-    @keyframes flashIn { 0%{background:#FF2D2D22} 100%{background:transparent} }
+    /* FEATURES */
+    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .feature{background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--border);display:flex;gap:14px;align-items:flex-start}
+    .feature-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+    .feature h4{font-size:14px;font-weight:700;margin-bottom:4px}
+    .feature p{color:#666;font-size:13px;line-height:1.5}
 
-    .ic-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .sev-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; letter-spacing: .5px; border: 1px solid; flex-shrink: 0; }
-    .sev-badge.CRITICAL { background: #FF2D2D22; border-color: #FF2D2D; color: #FF2D2D; }
-    .sev-badge.SERIOUS  { background: #FF8C0022; border-color: #FF8C00; color: #FF8C00; }
-    .sev-badge.MINOR    { background: #FFD70022; border-color: #FFD700; color: #FFD700; }
+    /* APP DOWNLOAD */
+    .download-section{background:linear-gradient(135deg,#0d2419,#12100e);border:1px solid #00FF8822;border-radius:24px;padding:48px;text-align:center;margin:40px 0}
+    .download-section h2{font-size:clamp(24px,3vw,40px);font-weight:900;margin-bottom:12px}
+    .download-section p{color:#888;margin-bottom:32px}
+    .store-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .store-btn{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;padding:12px 24px;display:flex;align-items:center;gap:12px;font-weight:700;cursor:pointer;transition:border-color .15s}
+    .store-btn:hover{border-color:#555}
+    .store-btn span{display:block;font-size:11px;color:#888;font-weight:400}
+    .store-btn strong{font-size:16px}
 
-    .ic-id   { font-size: 11px; color: #444; font-family: monospace; }
-    .ic-time { font-size: 11px; color: #555; margin-left: auto; }
-    .ic-main { font-size: 13px; font-weight: 600; color: #ddd; margin-bottom: 4px; }
-    .ic-sub  { font-size: 12px; color: #666; display: flex; gap: 12px; }
-    .ic-sub span { display: flex; align-items: center; gap: 4px; }
+    /* FOOTER */
+    footer{border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:#444;font-size:13px}
+    footer a{color:#666}footer a:hover{color:#aaa}
 
-    .dispatched-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; background: #00FF8822; color: #00FF88; border: 1px solid #00FF8844; border-radius: 4px; padding: 2px 6px; font-weight: 700; }
-
-    /* ── DETAIL (right) ── */
-    .detail { flex: 1; overflow-y: auto; padding: 20px 24px; }
-    .detail::-webkit-scrollbar { width: 4px; }
-    .detail::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
-
-    .detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #333; gap: 10px; }
-    .detail-empty svg { opacity: .15; }
-
-    /* detail header */
-    .d-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
-    .d-banner { flex: 1; border-radius: 10px; padding: 14px 18px; border: 1px solid; display: flex; align-items: center; gap: 10px; }
-    .d-banner-text { font-size: 16px; font-weight: 900; letter-spacing: .5px; }
-    .d-banner.CRITICAL { background: #FF2D2D18; border-color: #FF2D2D55; color: #FF2D2D; }
-    .d-banner.SERIOUS  { background: #FF8C0018; border-color: #FF8C0055; color: #FF8C00; }
-    .d-banner.MINOR    { background: #FFD70018; border-color: #FFD70055; color: #FFD700; }
-
-    .d-actions { display: flex; flex-direction: column; gap: 8px; }
-    .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity .15s; }
-    .btn:hover { opacity: .85; }
-    .btn-nav    { background: #1a4aff; color: #fff; }
-    .btn-disp   { background: #00FF8820; color: #00FF88; border: 1px solid #00FF8844; }
-    .btn-disp.done { background: #00FF8815; opacity: .5; cursor: default; }
-
-    /* cards */
-    .d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-    .d-card { background: #141414; border-radius: 12px; padding: 16px; border: 1px solid #1e1e1e; }
-    .d-card-title { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-    .d-card.full { grid-column: 1 / -1; }
-
-    .drow { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1e1e1e; font-size: 13px; }
-    .drow:last-child { border-bottom: none; }
-    .drow-label { color: #666; min-width: 130px; }
-    .drow-val { font-weight: 600; flex: 1; }
-
-    .big-score { font-size: 40px; font-weight: 900; text-align: right; margin-top: 4px; }
-    .injuries-list { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
-    .injury-tag { background: #FF8C0018; border: 1px solid #FF8C0033; color: #FF8C00; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
-
-    /* sensor timeline */
-    .timeline { width: 100%; height: 60px; background: #141414; border-radius: 8px; overflow: hidden; margin-top: 8px; position: relative; }
-    .timeline canvas { width: 100%; height: 100%; }
-
-    /* notification toast */
-    .toasts { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 100; pointer-events: none; }
-    .toast { background: #1a1a1a; border-left: 3px solid; border-radius: 8px; padding: 10px 14px; min-width: 260px; font-size: 13px; animation: slideIn .3s ease; pointer-events: auto; cursor: pointer; }
-    .toast.CRITICAL { border-color: #FF2D2D; }
-    .toast.SERIOUS  { border-color: #FF8C00; }
-    .toast.MINOR    { border-color: #FFD700; }
-    .toast-title { font-weight: 700; margin-bottom: 3px; }
-    .toast-sub   { color: #888; font-size: 12px; }
-    @keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
-
-    /* map placeholder */
-    .mini-map { width: 100%; height: 120px; background: #141414; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #333; font-size: 12px; margin-top: 8px; border: 1px solid #1e1e1e; }
-
-    /* filter bar active state */
-    .filter-active .incident-card { opacity: .35; }
-    .filter-active .incident-card.match { opacity: 1; }
+    @media(max-width:600px){
+      .stats{gap:24px}.hero-btns{flex-direction:column;align-items:stretch}
+      .btn-hero{justify-content:center}
+    }
   </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="live-dot"></div>
-    <div class="logo">BlackBox SOS</div>
-    <div class="live-label">LIVE</div>
+<nav>
+  <div class="nav-logo"><div class="live-dot"></div> BlackBox SOS</div>
+  <div class="nav-links">
+    <a href="user.html"      class="nav-btn">My Dashboard</a>
+    <a href="bystander.html" class="nav-btn">First Aid</a>
+    <a href="ambulance.html" class="nav-btn">Dispatch</a>
+    <a href="user.html"      class="nav-btn primary">Get Started →</a>
   </div>
-  <div class="counters">
-    <div class="counter ALL active" data-filter="ALL">
-      <span class="counter-num" id="cnt-all">0</span> Total
-    </div>
-    <div class="counter CRITICAL" data-filter="CRITICAL">
-      <span class="counter-num" id="cnt-critical">0</span> Critical
-    </div>
-    <div class="counter SERIOUS" data-filter="SERIOUS">
-      <span class="counter-num" id="cnt-serious">0</span> Serious
-    </div>
-    <div class="counter MINOR" data-filter="MINOR">
-      <span class="counter-num" id="cnt-minor">0</span> Minor
-    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🚨 Passive crash detection — zero user action required</div>
+  <h1>Your phone knows what happened<br><span>before you can speak</span></h1>
+  <p>BlackBox SOS silently records sensor data, auto-detects crashes, and sends a complete accident report to emergency services — before anyone makes a single call.</p>
+  <div class="hero-btns">
+    <a href="user.html"      class="btn-hero primary">🛡 Set Up My BlackBox</a>
+    <a href="bystander.html" class="btn-hero secondary">🩺 I'm a Bystander</a>
+    <a href="ambulance.html" class="btn-hero red">🚑 Ambulance Dashboard</a>
   </div>
-  <div class="clock" id="clock">--:--:--</div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">30s</div><div class="stat-label">Sensor buffer always recording</div></div>
+  <div class="stat"><div class="stat-num">2.5G</div><div class="stat-label">Crash detection threshold</div></div>
+  <div class="stat"><div class="stat-num">18+</div><div class="stat-label">Countries with correct emergency numbers</div></div>
+  <div class="stat"><div class="stat-num">0</div><div class="stat-label">Buttons to press after a crash</div></div>
 </div>
 
-<!-- BODY -->
-<div class="body">
-  <!-- FEED -->
-  <div class="feed">
-    <div class="feed-header">
-      Incoming Accidents
-      <span id="feed-count">0 active</span>
+<!-- HOW IT WORKS -->
+<section>
+  <h2 class="section-title">How It Works</h2>
+  <p class="section-sub">Runs silently. Acts instantly. Requires nothing from you.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-icon">📲</div>
+      <h3>Install & Activate</h3>
+      <p>Download the app, add your emergency contacts, and tap Start Monitoring. That's it.</p>
     </div>
-    <div class="feed-list" id="feed-list"></div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-icon">📡</div>
+      <h3>Always Listening</h3>
+      <p>Accelerometer + GPS record a rolling 30-second buffer, even when your phone is locked.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-icon">💥</div>
+      <h3>Crash Detected</h3>
+      <p>G-force spike + sudden speed drop triggers the protocol. No button needed.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-icon">🚑</div>
+      <h3>Help Arrives Informed</h3>
+      <p>Ambulance receives your exact location, impact speed, and AI injury prediction before they leave the station.</p>
+    </div>
   </div>
+</section>
 
-  <!-- DETAIL -->
-  <div class="detail" id="detail">
-    <div class="detail-empty">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-      <p>Select an incident to view details</p>
+<!-- PORTALS -->
+<section>
+  <h2 class="section-title">Choose Your View</h2>
+  <p class="section-sub">Three different portals, each built for a specific person at the scene.</p>
+  <div class="portals">
+    <div class="portal-card user" onclick="location.href='user.html'">
+      <div class="portal-icon">🛡</div>
+      <h3>For You (Driver)</h3>
+      <p>Set up your emergency contacts, view your crash history, and manage your BlackBox settings from the web.</p>
+      <a href="user.html" class="portal-link">Open My Dashboard →</a>
+    </div>
+    <div class="portal-card ambulance" onclick="location.href='ambulance.html'">
+      <div class="portal-icon">🚑</div>
+      <h3>For Ambulance / Dispatch</h3>
+      <p>Real-time feed of all incoming accidents, sorted by severity. AI injury predictions and one-tap navigation.</p>
+      <a href="ambulance.html" class="portal-link">Open Dispatch Dashboard →</a>
+    </div>
+    <div class="portal-card bystander" onclick="location.href='bystander.html'">
+      <div class="portal-icon">🩺</div>
+      <h3>For Bystanders</h3>
+      <p>You found someone injured. No app needed — open this page for step-by-step first aid guidance.</p>
+      <a href="bystander.html" class="portal-link">Open First Aid Guide →</a>
     </div>
   </div>
-</div>
+</section>
 
-<!-- TOASTS -->
-<div class="toasts" id="toasts"></div>
+<!-- FEATURES -->
+<section>
+  <h2 class="section-title">Built for the Real World</h2>
+  <p class="section-sub">Works everywhere, even offline, even without a SIM.</p>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">📴</div><div><h4>Offline First</h4><p>Crash detection runs locally. Reports queue and send when connectivity returns.</p></div></div>
+    <div class="feature"><div class="feature-icon">🌍</div><div><h4>Global Emergency Numbers</h4><p>Automatically dials the right number — 108 in India, 911 in the US, 999 in the UK.</p></div></div>
+    <div class="feature"><div class="feature-icon">🤖</div><div><h4>AI Injury Prediction</h4><p>Claude AI classifies severity and predicts injuries from raw sensor data alone.</p></div></div>
+    <div class="feature"><div class="feature-icon">📍</div><div><h4>Nearby Services</h4><p>Finds nearest hospitals, police stations, towing, and pharmacies via OpenStreetMap.</p></div></div>
+    <div class="feature"><div class="feature-icon">⚡</div><div><h4>Real-Time Dashboard</h4><p>Ambulance dispatch sees every incident the moment it happens via Firebase.</p></div></div>
+    <div class="feature"><div class="feature-icon">📱</div><div><h4>Background Detection</h4><p>Keeps monitoring even when the screen is off and the app is in the background.</p></div></div>
+  </div>
+</section>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script>
-// ─────────────────────────────────────────────
-// CONFIG — replace with your Firebase values
-// ─────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey:      "YOUR_API_KEY",
-  authDomain:  "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId:   "YOUR_PROJECT",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
-const incidents = new Map();   // id → report
-let selectedId  = null;
-let activeFilter = 'ALL';
-const dispatched = new Set();
-const SEV = { CRITICAL: '#FF2D2D', SERIOUS: '#FF8C00', MINOR: '#FFD700' };
-
-// ─────────────────────────────────────────────
-// CLOCK
-// ─────────────────────────────────────────────
-setInterval(() => {
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
-}, 1000);
-
-// ─────────────────────────────────────────────
-// FIREBASE LISTENER — real-time all accidents
-// ─────────────────────────────────────────────
-db.ref('accidents').on('child_added', (snap) => {
-  const r = snap.val();
-  r._key = snap.key;
-  addOrUpdateIncident(r, true);
-});
-
-db.ref('accidents').on('child_changed', (snap) => {
-  const r = snap.val();
-  r._key = snap.key;
-  addOrUpdateIncident(r, false);
-});
-
-function addOrUpdateIncident(r, isNew) {
-  const id = r.id ?? r._key;
-  r._id = id;
-  const existing = incidents.has(id);
-  incidents.set(id, r);
-  rebuildFeed();
-  updateCounters();
-  if (isNew && !existing) {
-    showToast(r);
-    playAlert(r.severity);
-  }
-  if (id === selectedId) renderDetail(r);
-}
-
-// ─────────────────────────────────────────────
-// FEED
-// ─────────────────────────────────────────────
-function rebuildFeed() {
-  const list = document.getElementById('feed-list');
-  // Sort: CRITICAL first, then by timestamp desc
-  const sorted = [...incidents.values()].sort((a, b) => {
-    const sevOrder = { CRITICAL: 0, SERIOUS: 1, MINOR: 2 };
-    const sd = (sevOrder[a.severity] ?? 1) - (sevOrder[b.severity] ?? 1);
-    if (sd !== 0) return sd;
-    return (b.timestamp ?? 0) - (a.timestamp ?? 0);
-  });
-
-  list.innerHTML = '';
-  sorted.forEach((r) => {
-    const matches = activeFilter === 'ALL' || r.severity === activeFilter;
-    const isSelected = r._id === selectedId;
-    const isDispatched = dispatched.has(r._id);
-    const card = document.createElement('div');
-    card.className = `incident-card ${isSelected ? 'selected' : ''} ${!matches ? 'hidden-filter' : ''}`;
-    card.style.display = (!matches) ? 'none' : '';
-    card.dataset.id = r._id;
-
-    const time = new Date(r.timestamp).toLocaleTimeString();
-    const loc = r.location ? `${Number(r.location.lat).toFixed(3)}°N, ${Number(r.location.lng).toFixed(3)}°E` : 'Unknown';
-
-    card.innerHTML = `
-      ${isDispatched ? '<div class="dispatched-tag">✓ DISPATCHED</div>' : ''}
-      <div class="ic-top">
-        <div class="sev-badge ${r.severity}">${r.severity}</div>
-        <div class="ic-id">${String(r._id).slice(-8)}</div>
-        <div class="ic-time">${time}</div>
+<!-- DOWNLOAD -->
+<section>
+  <div class="download-section">
+    <h2>Get the App</h2>
+    <p>The passive sensor engine runs only on your phone. Set it up once, forget it exists.</p>
+    <div class="store-btns">
+      <div class="store-btn">
+        <span style="font-size:28px">🍎</span>
+        <div><span>Download on the</span><strong>App Store</strong></div>
       </div>
-      <div class="ic-main">${loc}</div>
-      <div class="ic-sub">
-        <span>💥 ${Number(r.impactForce ?? 0).toFixed(1)}G</span>
-        <span>🚗 ${r.speedAtImpact ?? '—'} kmph</span>
-        <span>📐 ${r.impactDirection ?? '—'}</span>
+      <div class="store-btn">
+        <span style="font-size:28px">▶</span>
+        <div><span>Get it on</span><strong>Google Play</strong></div>
       </div>
-    `;
-    card.addEventListener('click', () => selectIncident(r._id));
-    list.appendChild(card);
-  });
-
-  document.getElementById('feed-count').textContent =
-    `${sorted.length} active`;
-}
-
-function selectIncident(id) {
-  selectedId = id;
-  rebuildFeed();
-  renderDetail(incidents.get(id));
-}
-
-// ─────────────────────────────────────────────
-// DETAIL PANEL
-// ─────────────────────────────────────────────
-function renderDetail(r) {
-  const detail = document.getElementById('detail');
-  if (!r) { detail.innerHTML = ''; return; }
-
-  const sevColor = SEV[r.severity] ?? '#FF2D2D';
-  const time = new Date(r.timestamp).toLocaleTimeString();
-  const mapsLink = r.location
-    ? `https://maps.google.com/?q=${r.location.lat},${r.location.lng}`
-    : '#';
-  const ai = r.aiClassification ?? {};
-  const isDisp = dispatched.has(r._id);
-
-  const injuryTags = (ai.likely_injuries ?? [])
-    .map(i => `<span class="injury-tag">${i}</span>`).join('');
-
-  detail.innerHTML = `
-    <div class="d-header">
-      <div class="d-banner ${r.severity}">
-        <span style="font-size:20px">⚠</span>
-        <span class="d-banner-text">INCOMING — ${r.severity}</span>
-      </div>
-      <div class="d-actions">
-        <a class="btn btn-nav" href="${mapsLink}" target="_blank">🗺 Navigate</a>
-        <button class="btn btn-disp ${isDisp ? 'done' : ''}" onclick="markDispatched('${r._id}')">
-          ${isDisp ? '✓ Dispatched' : '🚑 Mark Dispatched'}
-        </button>
-      </div>
+      <a href="https://github.com/Ap-0007/blackbox-sos" target="_blank" class="store-btn" style="text-decoration:none">
+        <span style="font-size:28px">⚙</span>
+        <div><span>Build from source</span><strong>GitHub</strong></div>
+      </a>
     </div>
+  </div>
+</section>
 
-    <div class="d-grid">
-      <!-- Sensor data -->
-      <div class="d-card">
-        <div class="d-card-title">Sensor Data</div>
-        ${drow('📍 Location', r.location ? `${Number(r.location.lat).toFixed(4)}°N, ${Number(r.location.lng).toFixed(4)}°E` : '—')}
-        ${drow('⏱ Time', time)}
-        ${drow('💥 Impact force', `${Number(r.impactForce ?? 0).toFixed(2)}G`, sevColor)}
-        ${drow('🚗 Speed', `${r.speedAtImpact ?? '—'} → ${r.speedAfter ?? 0} kmph`)}
-        ${drow('📐 Direction', r.impactDirection ?? '—')}
-        ${drow('📊 Snapshots', `${r.last30Seconds ?? 0} buffered`)}
-      </div>
+<footer>
+  <p>BlackBox SOS · <a href="https://github.com/Ap-0007/blackbox-sos" target="_blank">GitHub</a> · <a href="ambulance.html">Dispatch Dashboard</a> · <a href="bystander.html">Bystander Guide</a></p>
+  <p style="margin-top:8px">Built for the golden hour. Every second counts.</p>
+</footer>
 
-      <!-- AI assessment -->
-      <div class="d-card">
-        <div class="d-card-title">AI Assessment</div>
-        ${ai.severity ? `
-          ${drow('🚑 Dispatch', ai.dispatch ?? '—')}
-          ${drow('🏥 Hospital dept', (ai.hospital_dept ?? []).join(', '))}
-          ${drow('👥 Casualties', String(ai.estimated_casualties ?? '—'))}
-          <div class="big-score" style="color:${sevColor}">${(ai.priority_score ?? 0).toFixed(1)}<span style="font-size:14px;color:#555">/10</span></div>
-        ` : '<div style="color:#444;font-size:13px;padding-top:8px">Awaiting AI classification…</div>'}
-      </div>
-
-      <!-- Likely injuries (full width) -->
-      ${ai.likely_injuries?.length ? `
-      <div class="d-card full">
-        <div class="d-card-title">Predicted Injuries</div>
-        <div class="injuries-list">${injuryTags}</div>
-      </div>` : ''}
-
-      <!-- Mini map placeholder -->
-      <div class="d-card full">
-        <div class="d-card-title">Location</div>
-        <div class="mini-map">
-          <a href="${mapsLink}" target="_blank" style="color:#1a4aff;font-weight:700;font-size:13px;">
-            📍 Open in Google Maps → ${r.location ? `${Number(r.location.lat).toFixed(4)}, ${Number(r.location.lng).toFixed(4)}` : ''}
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div style="color:#333;font-size:11px;text-align:right;margin-top:4px">ID: ${r._id}</div>
-  `;
-}
-
-function drow(label, val, color = '#fff') {
-  return `<div class="drow">
-    <span class="drow-label">${label}</span>
-    <span class="drow-val" style="color:${color}">${val}</span>
-  </div>`;
-}
-
-function markDispatched(id) {
-  dispatched.add(id);
-  rebuildFeed();
-  if (id === selectedId) renderDetail(incidents.get(id));
-}
-
-// ─────────────────────────────────────────────
-// COUNTERS
-// ─────────────────────────────────────────────
-function updateCounters() {
-  const all = [...incidents.values()];
-  document.getElementById('cnt-all').textContent      = all.length;
-  document.getElementById('cnt-critical').textContent = all.filter(r => r.severity === 'CRITICAL').length;
-  document.getElementById('cnt-serious').textContent  = all.filter(r => r.severity === 'SERIOUS').length;
-  document.getElementById('cnt-minor').textContent    = all.filter(r => r.severity === 'MINOR').length;
-}
-
-// ─────────────────────────────────────────────
-// FILTER
-// ─────────────────────────────────────────────
-document.querySelectorAll('.counter').forEach(btn => {
-  btn.addEventListener('click', () => {
-    activeFilter = btn.dataset.filter;
-    document.querySelectorAll('.counter').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    rebuildFeed();
-  });
-});
-
-// ─────────────────────────────────────────────
-// TOAST NOTIFICATIONS
-// ─────────────────────────────────────────────
-function showToast(r) {
-  const toasts = document.getElementById('toasts');
-  const t = document.createElement('div');
-  t.className = `toast ${r.severity}`;
-  t.innerHTML = `
-    <div class="toast-title">${r.severity} — New Crash Detected</div>
-    <div class="toast-sub">${Number(r.impactForce ?? 0).toFixed(1)}G · ${r.speedAtImpact ?? '—'} kmph · ${r.impactDirection ?? ''}</div>
-  `;
-  t.onclick = () => { selectIncident(r._id); t.remove(); };
-  toasts.prepend(t);
-  setTimeout(() => t.remove(), 8000);
-}
-
-// ─────────────────────────────────────────────
-// AUDIO ALERT  (beep via Web Audio API)
-// ─────────────────────────────────────────────
-let audioCtx;
-function playAlert(severity) {
-  try {
-    if (!audioCtx) audioCtx = new AudioContext();
-    const freqs = { CRITICAL: [880, 660, 880], SERIOUS: [660], MINOR: [440] };
-    const tones = freqs[severity] ?? [440];
-    let t = audioCtx.currentTime;
-    tones.forEach(freq => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.3, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      osc.start(t); osc.stop(t + 0.25);
-      t += 0.3;
-    });
-  } catch (_) {}
-}
-
-// ─────────────────────────────────────────────
-// DEMO SEED — loads mock data so UI is testable
-// without Firebase. Remove in production.
-// ─────────────────────────────────────────────
-const DEMO_REPORTS = [
-  {
-    _id:'demo_001', id:'demo_001', timestamp: Date.now() - 120000,
-    location:{lat:21.1458,lng:79.0882}, impactForce:4.2, speedAtImpact:87, speedAfter:0,
-    impactDirection:'Front-left', severity:'CRITICAL', last30Seconds:300,
-    aiClassification:{severity:'CRITICAL',likely_injuries:['head trauma','chest injury','rib fractures'],dispatch:'trauma ambulance',hospital_dept:['ICU','neurosurgery'],estimated_casualties:2,priority_score:9.2},
-  },
-  {
-    _id:'demo_002', id:'demo_002', timestamp: Date.now() - 60000,
-    location:{lat:21.1521,lng:79.0761}, impactForce:2.9, speedAtImpact:54, speedAfter:5,
-    impactDirection:'Rear', severity:'SERIOUS', last30Seconds:300,
-    aiClassification:{severity:'SERIOUS',likely_injuries:['whiplash','lumbar sprain'],dispatch:'basic ambulance',hospital_dept:['emergency','orthopaedics'],estimated_casualties:1,priority_score:6.1},
-  },
-  {
-    _id:'demo_003', id:'demo_003', timestamp: Date.now() - 15000,
-    location:{lat:21.1390,lng:79.1020}, impactForce:2.6, speedAtImpact:30, speedAfter:0,
-    impactDirection:'Right-side', severity:'SERIOUS', last30Seconds:300,
-  },
-  {
-    _id:'demo_004', id:'demo_004', timestamp: Date.now() - 5000,
-    location:{lat:21.1600,lng:79.0900}, impactForce:1.8, speedAtImpact:22, speedAfter:10,
-    impactDirection:'Front', severity:'MINOR', last30Seconds:120,
-    aiClassification:{severity:'MINOR',likely_injuries:['minor bruising'],dispatch:'first responder',hospital_dept:['general'],estimated_casualties:1,priority_score:2.4},
-  },
-];
-
-// Inject demo data (comment out once Firebase is live)
-setTimeout(() => {
-  DEMO_REPORTS.forEach((r, i) => {
-    setTimeout(() => addOrUpdateIncident(r, i > 1), i * 800);
-  });
-}, 400);
-</script>
 </body>
 </html>

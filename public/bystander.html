@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>First Aid Guide — BlackBox SOS</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a0a;color:#fff;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+    /* ETA HEADER */
+    .eta-bar{background:#1a0505;border-bottom:2px solid #FF2D2D55;padding:20px 24px;text-align:center;position:sticky;top:0;z-index:10}
+    .eta-bar h1{font-size:18px;font-weight:900;color:#FF2D2D;margin-bottom:6px;letter-spacing:.5px}
+    .eta-timer-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px}
+    .eta-num{font-size:48px;font-weight:900;color:#FF2D2D;font-variant-numeric:tabular-nums}
+    .eta-label{color:#888;font-size:13px}
+    .progress-track{height:6px;background:#2a0a0a;border-radius:3px;overflow:hidden;max-width:400px;margin:0 auto}
+    .progress-bar{height:6px;background:#FF2D2D;border-radius:3px;width:0%;transition:width 1s linear}
+
+    .container{max-width:640px;margin:0 auto;padding:24px 20px 80px}
+
+    /* LAW BANNER */
+    .law-banner{background:#1a1500;border:1px solid #FFD70033;border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start}
+    .law-banner p{color:#ccc;font-size:14px;line-height:1.6}
+    .law-banner strong{color:#FFD700}
+
+    /* CALL NOW */
+    .call-section{margin-bottom:24px}
+    .call-section h2{font-size:15px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+    .call-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .call-btn{border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;text-decoration:none;display:block;border:1px solid;transition:opacity .15s}
+    .call-btn:hover{opacity:.8}
+    .call-btn.amb{background:#FF2D2D20;border-color:#FF2D2D55}
+    .call-btn.pol{background:#1a4aff20;border-color:#1a4aff55}
+    .call-btn.fir{background:#FF450020;border-color:#FF450055}
+    .call-num{font-size:24px;font-weight:900}
+    .call-num.amb{color:#FF2D2D}
+    .call-num.pol{color:#4a8aff}
+    .call-num.fir{color:#FF6020}
+    .call-tag{font-size:11px;color:#666;margin-top:3px}
+
+    /* STEPS */
+    .steps-title{font-size:18px;font-weight:800;margin-bottom:16px}
+    .step-card{background:#141414;border-radius:16px;padding:20px;margin-bottom:12px;border:1px solid #1e1e1e;display:flex;gap:16px;align-items:flex-start}
+    .step-left{flex-shrink:0;text-align:center}
+    .step-num{width:36px;height:36px;border-radius:18px;background:#FF8C0020;border:1px solid #FF8C0044;color:#FF8C00;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+    .step-icon{font-size:22px}
+    .step-body h3{font-size:15px;font-weight:700;margin-bottom:6px}
+    .step-body p{color:#aaa;font-size:14px;line-height:1.6}
+    .step-warning{background:#FF2D2D15;border-left:3px solid #FF2D2D;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:10px;color:#FF9090;font-size:13px}
+    .step-tip{background:#00FF8815;border-left:3px solid #00FF88;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:10px;color:#88ffcc;font-size:13px}
+
+    /* DO NOT */
+    .donot-card{background:#1a0505;border:1px solid #FF2D2D33;border-radius:16px;padding:20px;margin-bottom:12px}
+    .donot-card h3{color:#FF2D2D;font-size:15px;font-weight:700;margin-bottom:14px}
+    .donot-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;color:#bbb;font-size:14px}
+    .donot-row:last-child{margin-bottom:0}
+    .donot-x{color:#FF2D2D;font-size:16px;flex-shrink:0;font-weight:900}
+
+    /* CPR GUIDE */
+    .cpr-card{background:#0d1f2d;border:1px solid #1a4aff33;border-radius:16px;padding:20px;margin-bottom:12px}
+    .cpr-card h3{color:#4a8aff;font-weight:700;margin-bottom:14px}
+    .cpr-steps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cpr-step{background:#141414;border-radius:10px;padding:12px;text-align:center}
+    .cpr-step .num{font-size:24px;font-weight:900;color:#4a8aff}
+    .cpr-step p{color:#888;font-size:12px;margin-top:4px}
+
+    /* SHARE */
+    .share-bar{position:fixed;bottom:0;left:0;right:0;background:#0f0f0f;border-top:1px solid #1e1e1e;padding:14px 24px;display:flex;gap:10px;justify-content:center}
+    .share-btn{background:#1a1a1a;border:1px solid #2a2a2a;color:#aaa;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;flex:1;max-width:200px;transition:all .15s}
+    .share-btn:hover{border-color:#555;color:#fff}
+    .share-btn.primary{background:#FF8C0020;border-color:#FF8C0044;color:#FF8C00}
+
+    @media(max-width:480px){.call-btns{grid-template-columns:1fr 1fr 1fr}.cpr-steps{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+
+<!-- STICKY ETA BAR -->
+<div class="eta-bar">
+  <h1>🚨 Help Is On the Way</h1>
+  <div class="eta-timer-row">
+    <div>
+      <div class="eta-num" id="eta-display">6:00</div>
+      <div class="eta-label">estimated arrival</div>
+    </div>
+  </div>
+  <div class="progress-track">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- GOOD SAMARITAN LAW -->
+  <div class="law-banner">
+    <span style="font-size:24px;flex-shrink:0">⚖️</span>
+    <p>You are fully protected under the <strong>Good Samaritan Law</strong>. You cannot be held liable for helping in good faith. <strong>Please help — your action saves a life.</strong></p>
+  </div>
+
+  <!-- CALL NOW -->
+  <div class="call-section">
+    <h2>Call Now If Not Done</h2>
+    <div class="call-btns">
+      <a href="tel:108" class="call-btn amb"><div class="call-num amb">108</div><div class="call-tag">Ambulance</div></a>
+      <a href="tel:100" class="call-btn pol"><div class="call-num pol">100</div><div class="call-tag">Police</div></a>
+      <a href="tel:101" class="call-btn fir"><div class="call-num fir">101</div><div class="call-tag">Fire</div></a>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps-title">While You Wait — Step by Step</div>
+
+  <div class="step-card">
+    <div class="step-left"><div class="step-num">1</div><div class="step-icon">🛑</div></div>
+    <div class="step-body">
+      <h3>Make the Scene Safe</h3>
+      <p>Turn on your hazard lights. Keep other vehicles back at least 30 metres. Turn off the crashed vehicle's engine if you can safely reach it.</p>
+      <div class="step-warning">⚠ Do not approach if you smell fuel or see fire. Call fire services first.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-left"><div class="step-num">2</div><div class="step-icon">🫁</div></div>
+    <div class="step-body">
+      <h3>Check Breathing</h3>
+      <p>Look, listen, and feel for breathing for 10 seconds. Watch chest movement. Place your cheek near their mouth.</p>
+      <div class="step-tip">✓ If breathing normally — keep them still and warm. Monitor constantly.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-left"><div class="step-num">3</div><div class="step-icon">🩹</div></div>
+    <div class="step-body">
+      <h3>Control Bleeding</h3>
+      <p>Apply firm, constant pressure with a cloth to any bleeding wound. Do not lift the cloth — add more on top if it soaks through. Maintain pressure until ambulance arrives.</p>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-left"><div class="step-num">4</div><div class="step-icon">🚫</div></div>
+    <div class="step-body">
+      <h3>Don't Move the Victim</h3>
+      <p>Unless there is immediate danger (fire, water), keep the person exactly where they are. Moving them risks spinal cord injury.</p>
+      <div class="step-warning">⚠ Spinal injuries can be invisible. Assume one exists unless cleared by paramedics.</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-left"><div class="step-num">5</div><div class="step-icon">🗣</div></div>
+    <div class="step-body">
+      <h3>Keep Them Conscious</h3>
+      <p>Talk to them calmly and constantly. Say your name, tell them help is coming, ask simple questions. A talking victim is a conscious victim.</p>
+      <div class="step-tip">✓ "My name is [name]. An ambulance is on the way. Can you hear me?"</div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-left"><div class="step-num">6</div><div class="step-icon">🌡</div></div>
+    <div class="step-body">
+      <h3>Prevent Shock</h3>
+      <p>Keep the victim warm — use a blanket, jacket, or anything available. Loosen tight clothing around neck and chest. Lay them flat unless breathing is difficult.</p>
+    </div>
+  </div>
+
+  <!-- CPR GUIDE -->
+  <div class="cpr-card">
+    <h3>🫀 If Not Breathing — Start CPR</h3>
+    <div class="cpr-steps">
+      <div class="cpr-step"><div class="num">30</div><p>Chest compressions — hard and fast</p></div>
+      <div class="cpr-step"><div class="num">2</div><p>Rescue breaths — tilt head back</p></div>
+      <div class="cpr-step"><div class="num">5cm</div><p>Compression depth — push hard</p></div>
+      <div class="cpr-step"><div class="num">100+</div><p>Compressions per minute — keep the rhythm</p></div>
+    </div>
+  </div>
+
+  <!-- DO NOT -->
+  <div class="donot-card">
+    <h3>✗ Do NOT:</h3>
+    <div class="donot-row"><div class="donot-x">✗</div><div>Give water, food, or medicine to the victim</div></div>
+    <div class="donot-row"><div class="donot-x">✗</div><div>Remove a helmet unless they are not breathing</div></div>
+    <div class="donot-row"><div class="donot-x">✗</div><div>Leave the scene before paramedics arrive</div></div>
+    <div class="donot-row"><div class="donot-x">✗</div><div>Move the victim unless there is immediate fire or flood danger</div></div>
+    <div class="donot-row"><div class="donot-x">✗</div><div>Pull out embedded objects from wounds — stabilise them instead</div></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM SHARE BAR -->
+<div class="share-bar">
+  <button class="share-btn" onclick="copyLink()">📋 Copy This Link</button>
+  <button class="share-btn primary" onclick="shareGuide()">📤 Share Guide</button>
+</div>
+
+<script>
+  // ETA countdown — parameterisable via ?eta=6 in URL
+  const params  = new URLSearchParams(location.search);
+  const etaMins = parseFloat(params.get('eta') || '6');
+  const totalSec = etaMins * 60;
+  let elapsed = 0;
+
+  function fmt(s) {
+    const m = Math.floor(s / 60), sec = s % 60;
+    return `${m}:${String(sec).padStart(2,'0')}`;
+  }
+
+  const interval = setInterval(() => {
+    elapsed++;
+    const remaining = Math.max(0, totalSec - elapsed);
+    document.getElementById('eta-display').textContent = fmt(remaining);
+    document.getElementById('progress-bar').style.width = `${(elapsed / totalSec) * 100}%`;
+    if (remaining === 0) { clearInterval(interval); document.getElementById('eta-display').textContent = 'Arrived'; }
+  }, 1000);
+
+  // Detect country from timezone for emergency numbers
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const nums = { 'Asia/Kolkata': ['108','100','101'], 'America/New_York': ['911','911','911'],
+      'Europe/London': ['999','999','999'], 'Australia/Sydney': ['000','000','000'] };
+    const n = nums[tz];
+    if (n) {
+      const btns = document.querySelectorAll('.call-num');
+      btns[0].textContent = n[0]; btns[1].textContent = n[1]; btns[2].textContent = n[2];
+    }
+  } catch(_) {}
+
+  function copyLink() {
+    navigator.clipboard?.writeText(location.href).catch(() => {});
+    const btn = event.target; btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy This Link', 2000);
+  }
+
+  function shareGuide() {
+    if (navigator.share) {
+      navigator.share({ title: 'First Aid Guide — BlackBox SOS', url: location.href });
+    } else { copyLink(); }
+  }
+</script>
+</body>
+</html>
