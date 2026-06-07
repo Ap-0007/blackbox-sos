@@ -1,67 +1,40 @@
-# BlackBox SOS — Hackathon Starter
+# Blackbox Sos
 
-## 30-minute setup
+🚨 Passive crash detection app — React Native + Expo. Auto-detects accidents via sensor fusion, sends location + AI injury report to emergency services before anyone makes a call.
+
+![Language](https://img.shields.io/badge/language-HTML-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![GitHub](https://img.shields.io/github/stars/Ap-0007/blackbox-sos?style=social)
+
+## 🌐 Live Demo
+
+**[View Live →](https://blackbox-sos.vercel.app)**
+
+## 📖 About
+
+🚨 Passive crash detection app — React Native + Expo. Auto-detects accidents via sensor fusion, sends location + AI injury report to emergency services before anyone makes a call.
+
+## 🛠️ Tech Stack
+
+- **Primary Language:** HTML
+
+## 🚀 Getting Started
 
 ```bash
-# 1. Install app dependencies
-npm install
-
-# 2. Copy env and fill in keys
-cp .env.example .env
-
-# 3. Start the app
-npx expo start
-
-# 4. In a second terminal — start backend
-cd backend && npm install && npm run dev
+# Clone the repository
+git clone https://github.com/Ap-0007/blackbox-sos.git
+cd blackbox-sos
 ```
 
-## Team split
+Open `index.html` in your browser to get started.
 
-| Person | File(s) | Task |
-|--------|---------|------|
-| P1 | `services/SensorEngine.ts` `services/CrashDetector.ts` | Tune thresholds, test on real device |
-| P2 | `screens/HomeScreen.tsx` `screens/BystanderGuideScreen.tsx` | Polish UI, add animations |
-| P3 | `services/ClaudeClassifier.ts` | Wire Claude API key, test prompt |
-| P4 | `backend/server.js` + Twilio | Add Firebase write, test SMS |
-| P5 | `web-dashboard/index.html` | Fill Firebase config, live test |
+## 🤝 Contributing
 
-## Demo trigger
+Contributions, issues, and feature requests are welcome!  
+Feel free to open an [issue](https://github.com/Ap-0007/blackbox-sos/issues) or submit a pull request.
 
-On the Home screen tap **"Simulate Crash (Demo)"** — no need to actually crash.  
-Or shake the phone hard (>3G via `evaluateShake`).
+## 📄 License
 
-## Key constants to tune
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
-`constants/config.ts`:
-- `CRASH_THRESHOLD_G` — default 2.5G (lower = more sensitive)
-- `SPEED_DROP_THRESHOLD_KMH` — default 40 kmph
-- `CANCEL_COUNTDOWN_SEC` — false-alarm cancel window (default 15s)
+---
 
-## Screens
-
-| Screen | File | Trigger |
-|--------|------|---------|
-| Home / monitoring | `screens/HomeScreen.tsx` | App open |
-| Crash detected | `screens/CrashDetectedScreen.tsx` | Auto on crash |
-| Bystander guide | `screens/BystanderGuideScreen.tsx` | Tab bar |
-| Ambulance dashboard | `screens/AmbulanceDashboard.tsx` | In-app tab + `web-dashboard/index.html` |
-
-## Firebase setup
-
-1. Create project at console.firebase.google.com  
-2. Enable Realtime Database  
-3. Copy config into `web-dashboard/index.html` and `.env`
-
-## Architecture
-
-```
-Phone sensors (10Hz polling)
-  └─> 300-slot ring buffer (30 sec @ 100ms)
-        └─> CrashDetector (G-force + speed-drop check)
-              └─> buildReport() → AccidentReport JSON
-                    ├─> Firebase Realtime DB  ← web dashboard listens here
-                    ├─> Backend /report       → logs + future DB
-                    ├─> Backend /alert        → Twilio SMS to family
-                    └─> Claude API            → AI severity classification
-```
+**Built by [vanta.nox](https://github.com/Ap-0007)**
